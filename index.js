@@ -92,7 +92,9 @@ app.delete('/api/persons/:id',(req,res) => {
     res.status(204).end()
 })
 
-
+app.use((request,response)=> {
+    response.status(404).end()
+})
 const generateId = () => {
     const maxId = persons.length > 0
     ? Math.max(...persons.map(n => n.id))
