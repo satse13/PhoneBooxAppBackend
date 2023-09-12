@@ -51,12 +51,17 @@ app.post('/api/persons',(req,res) => {
 
     const body = req.body
 
-    if(!body.name || !body.number) {
+    if(!body.name) {
         return res.status(400).json({
-            error:'Nombre o numero faltante en la solicitud'
+            error:'Nombre faltante en la solicitud'
         });
     }
-
+    if(!body.number){
+        return res.status(400).json({
+            error:'Numero faltante en la solicitud'
+        });
+    }
+    
     const newPerson = {
         name: body.name,
         number: body.number,
@@ -76,14 +81,15 @@ app.delete('/api/persons/:id',(req,res) => {
     res.status(204).end()
 })
 
+
+const generateId = () => {
+    const maxId = persons.length > 0
+    ? Math.max(...persons.map(n => n.id))
+    : 0
+    return maxId + 1
+}
+
 const PORT = 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 })
-
-const generateId = () => {
-    const maxId = persons.length > 0
-      ? Math.max(...persons.map(n => n.id))
-      : 0
-    return maxId + 1
-  }
