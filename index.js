@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+app.use(express.json());
 
 let persons = [
     { 
@@ -46,6 +47,28 @@ app.get('/info', (req,res) => {
     <p>${new Date()}</p>`)
 })
 
+app.post('/api/persons',(req,res) => {
+
+    const body = req.body
+
+    if(!body.name || !body.number) {
+        return res.status(400).json({
+            error:'Nombre o numero faltante en la solicitud'
+        });
+    }
+
+    const newPerson = {
+        name: body.name,
+        number: body.number,
+        id: generateId(),
+    }
+    console.log({newPerson})
+
+    persons = persons.concat(newPerson)
+
+    res.json(newPerson)
+})
+
 app.delete('/api/persons/:id',(req,res) => {
     const id = Number(req.params.id)
     persons = persons.filter(person => person.id !== id)
@@ -57,3 +80,10 @@ const PORT = 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 })
+
+const generateId = () => {
+    const maxId = persons.length > 0
+      ? Math.max(...persons.map(n => n.id))
+      : 0
+    return maxId + 1
+  }
