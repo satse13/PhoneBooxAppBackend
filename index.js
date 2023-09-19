@@ -1,6 +1,20 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const app = express()
+const mongoose = require('mongoose')
+
+const url = process.env.MONGODB_URI
+mongoose.set('strictQuery',false)
+mongoose.connect(url)
+
+const personSchema = new mongoose.Schema({
+    name: String,
+    number: String,
+})
+
+const Person = mongoose.model('Person', personSchema)
+
 
 var morgan = require('morgan')
 
@@ -20,52 +34,34 @@ app.use(morgan((tokens, req, res) => {
     ].join(' ')
 }))
 
-let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
 
 app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>')
 })
 
-app.get('/api/persons', (req, res) => {
-    res.json(persons)
+app.get('/api/people', (req, res) => {
+    Person.find({}).then(people => {
+        res.json(people)
+    })
 })
 
-app.get('/api/persons/:id', (req,res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-    if(!person)
-        res.status(404).end()
-    else
-        res.json(person)
+app.get('/api/people/:id', (req,res,next) => {
+    Person.findById(req.params.id)
+    .then(person => {
+        person
+         ? res.json(person)
+         : res.status(404).end()
+    })
+    .catch(error => next(error))
+    
 })
 
 app.get('/info', (req,res) => {
-    res.send(`<h1>Phonebook has info for ${persons.length} people</h1>
+    res.send(`<h1>Phonebook has info for ${4} people</h1>
     <p>${new Date()}</p>`)
 })
 
-app.post('/api/persons',(req,res) => {
+app.post('/api/people',(req,res) => {
 
     const body = req.body
 
@@ -80,36 +76,33 @@ app.post('/api/persons',(req,res) => {
         });
     }
     
-    const newPerson = {
+    const newPerson = new Person({
         name: body.name,
         number: body.number,
-        id: generateId(),
-    }
+    })
     console.log({newPerson})
 
-    persons = persons.concat(newPerson)
-
-    res.json(newPerson)
+    newPerson.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
 })
 
-app.delete('/api/persons/:id',(req,res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
-    
-    res.status(204).end()
+app.delete('/api/people/:id',(req,res,next) => {
+
+    Person.findByIdAndRemove(req.params.id)
+    .then(result => {
+      res.status(204).end()
+    })
+    .catch(error => next(error))
+ 
 })
 
 app.use((request,response)=> {
     response.status(404).end()
 })
-const generateId = () => {
-    const maxId = persons.length > 0
-    ? Math.max(...persons.map(n => n.id))
-    : 0
-    return maxId + 1
-}
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 })
