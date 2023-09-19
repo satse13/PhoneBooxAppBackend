@@ -88,7 +88,7 @@ app.post('/api/people',(req,res) => {
         name: body.name,
         number: body.number,
     })
-    console.log({newPerson})
+    console.log({newPerson}) // comentario prueba
 
     newPerson.save().then(savedPerson => {
         res.json(savedPerson)
