@@ -33,6 +33,12 @@ app.use(express.json());
 app.use(requestLogger)
 app.use(express.static('dist'))
 
+app.get('/api/people/info', (req,res) => {
+    Person.countDocuments({}).then(count => {
+        res.send({peopleAmount: count})
+    })
+})
+
 app.get('/api/people', (req, res) => {
     Person.find({}).then(people => {
         res.json(people)
